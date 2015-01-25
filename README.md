@@ -31,7 +31,7 @@ Load a RABX message:
 message = RABX::Message.load("R1:0,10:RPC.method,L1:2,T8:argument,I1:3,")
 message.type # "R"
 message.method # "RPC.method"
-message.argumetns # ["argument", 3]
+message.arguments # ["argument", 3]
 
 message = RABX::Message.load("S1:0,A1:2,T4:name,T3:foo,T5:email,T15:foo@example.com,")
 message.type # "S"
