@@ -10,7 +10,41 @@ The RABX specification is a [Perl module](https://github.com/mysociety/commonlib
 
 ## Usage
 
+```ruby
+require 'rabx/message'
+```
 
+Dump a RABX message:
+
+```ruby
+RABX::Message.dump('R', 'RPC.method', ['argument', 3])
+# => "R1:0,10:RPC.method,L1:2,T8:argument,I1:3,"
+RABX::Message.dump('S', {name: 'foo', email: 'foo@example.com'})
+# => "S1:0,A1:2,T4:name,T3:foo,T5:email,T15:foo@example.com,"
+RABX::Message.dump('E', 404, 'Not Found')
+# => "E1:0,3:404,9:Not Found,N"
+```
+
+Load a RABX message:
+
+```ruby
+message = RABX::Message.load("R1:0,10:RPC.method,L1:2,T8:argument,I1:3,")
+message.type # "R"
+message.method # "RPC.method"
+message.argumetns # ["argument", 3]
+
+message = RABX::Message.load("S1:0,A1:2,T4:name,T3:foo,T5:email,T15:foo@example.com,")
+message.type # "S"
+message.value # {"name"=>"foo", "email"=>"foo@example.com"}
+
+message = RABX::Message.load("E1:0,3:404,9:Not Found,N")
+message.type # "E"
+message.code # "404"
+message.text # "Not Found"
+message.extra # nil
+```
+
+See the [documentation](http://www.rubydoc.info/gems/rabx-message) to see how to work with `RABX::Message` instances.
 
 ## Notes
 

@@ -22,35 +22,28 @@ module RABX
           string + _dump(args[0])
         end
       elsif type == 'E'
-        string + Netstring.dump(args[0]) + Netstring.dump(args[1]) + _dump(args[2])
+        string + Netstring.dump(args[0].to_s) + Netstring.dump(args[1]) + _dump(args[2])
       end
     end
 
     # Loads a RABX message.
     #
     # @param [String] s a RABX message
-    # @return the contents of the message
+    # @return [Message] a parsed message
     def self.load(s)
-      message = new(s)
-      if message.unknown?
-        raise ProtocolError, %(unknown RABX message type "#{s[0]}")
+      case s[0]
+      when 'R'
+        RequestMessage.new(s)
+      when 'S'
+        SuccessMessage.new(s)
+      when 'E'
+        ErrorMessage.new(s)
       else
-        version = message.getnetstring
-        unless version == '0'
-          raise ProtocolError, %(unknown protocol version "#{version}")
-        end
-        if message.success?
-          message.gets
-        elsif message.request?
-          [message.getnetstring, message.gets]
-        elsif message.error?
-          code = message.getnetstring
-          text = message.getnetstring
-          text += message.gets.to_s unless message.eof?
-          raise Error, "#{code}: #{text}"
-        end
+        raise ProtocolError, %(unknown RABX message type "#{s[0]}")
       end
     end
+
+    attr_reader :version
 
     # @param [String] s a RABX message
     def initialize(s)
@@ -59,7 +52,9 @@ module RABX
       end
       @s = s.dup # string
       @p = 1 # pointer
-      @size = s.size
+      @size = @s.size
+      @version = getnetstring
+      parse
     end
 
     # Returns the RABX message.
@@ -74,34 +69,6 @@ module RABX
     # @return [String] the message type
     def type
       @s[0]
-    end
-
-    # Returns whether the message is a request message.
-    #
-    # @return [Boolean] whether the message is a request message
-    def request?
-      type == 'R'
-    end
-
-    # Returns whether the message is a success message.
-    #
-    # @return [Boolean] whether the message is a success message
-    def success?
-      type == 'S'
-    end
-
-    # Returns whether the message is a error message.
-    #
-    # @return [Boolean] whether the message is a error message
-    def error?
-      type == 'E'
-    end
-
-    # Returns whether the type of the message is unknown.
-    #
-    # @return [Boolean] whether the type of the message is unknown
-    def unknown?
-      !%w(R S E).include?(type)
     end
 
     # Returns whether the reader has reached the end-of-file.
@@ -136,28 +103,28 @@ module RABX
         type = @s[@p]
         @p += 1
 
-        if type == 'N'
+        if type == 'N' # null
           return nil
         end
 
         case type
-        when 'I'
+        when 'I' # integer
           value = getnetstring.to_s
           begin
             Integer(value)
           rescue ArgumentError
             raise ProtocolError, %(expected integer, got #{value.inspect} at position #{@p - value.size - 1})
           end
-        when 'R'
+        when 'R' # real
           value = getnetstring.to_s
           begin
             Float(value)
           rescue ArgumentError
             raise ProtocolError, %(expected float, got #{value.inspect} at position #{@p - value.size - 1})
           end
-        when 'T', 'B'
+        when 'T', 'B' # text, binary
           getnetstring
-        when 'L'
+        when 'L' # list
           value = getnetstring.to_s
           begin
             size = Integer(value)
@@ -172,7 +139,7 @@ module RABX
             array << gets
           end
           array
-        when 'A'
+        when 'A' # associative array
           value = getnetstring.to_s
           begin
             size = Integer(value)
@@ -199,14 +166,10 @@ module RABX
 
   private
 
-    # RABX types:
-    # * Null
-    # * Integer
-    # * Real
-    # * Text
-    # * Binary
-    # * List
-    # * Associative array
+    def parse
+      # If not implemented, user can read message using `getnetstring` and `gets`.
+    end
+
     def self._dump(args)
       case args
       when nil
@@ -221,6 +184,8 @@ module RABX
         'R' + Netstring.dump(args.to_s)
       when String
         'T' + Netstring.dump(args)
+      when Symbol
+        'T' + Netstring.dump(args.to_s)
       when Array
         'L' + Netstring.dump(args.size.to_s) + args.map{|arg| _dump(arg)}.join
       when Hash
@@ -228,6 +193,33 @@ module RABX
       else
         raise InterfaceError, "can't pass #{args.class} over RABX"
       end
+    end
+  end
+
+  class RequestMessage < Message
+    attr_reader :method, :arguments
+
+    def parse
+      @method = getnetstring
+      @arguments = gets
+    end
+  end
+
+  class SuccessMessage < Message
+    attr_reader :value
+
+    def parse
+      @value = gets
+    end
+  end
+
+  class ErrorMessage < Message
+    attr_reader :code, :text, :extra
+
+    def parse
+      @code = getnetstring
+      @text = getnetstring
+      @extra = gets unless eof?
     end
   end
 end
