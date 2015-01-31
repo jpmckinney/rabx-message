@@ -1,7 +1,7 @@
 # RPC using Anything But XML (RABX) message parser and emitter
 
-[![Gem Version](https://badge.fury.io/rb/rabx-message.svg)](http://badge.fury.io/rb/rabx-message)
-[![Build Status](https://secure.travis-ci.org/jpmckinney/rabx-message.png)](http://travis-ci.org/jpmckinney/rabx-message)
+[![Gem Version](https://badge.fury.io/rb/rabx-message.svg)](https://badge.fury.io/rb/rabx-message)
+[![Build Status](https://secure.travis-ci.org/jpmckinney/rabx-message.png)](https://travis-ci.org/jpmckinney/rabx-message)
 [![Dependency Status](https://gemnasium.com/jpmckinney/rabx-message.png)](https://gemnasium.com/jpmckinney/rabx-message)
 [![Coverage Status](https://coveralls.io/repos/jpmckinney/rabx-message/badge.png)](https://coveralls.io/r/jpmckinney/rabx-message)
 [![Code Climate](https://codeclimate.com/github/jpmckinney/rabx-message.png)](https://codeclimate.com/github/jpmckinney/rabx-message)

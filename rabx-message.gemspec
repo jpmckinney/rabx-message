@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version     = RABX::Message::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["James McKinney"]
-  s.homepage    = "http://github.com/jpmckinney/rabx-message"
+  s.homepage    = "https://github.com/jpmckinney/rabx-message"
   s.summary     = %q{A RPC using Anything But XML (RABX) message parser and emitter}
   s.license     = 'MIT'
 
